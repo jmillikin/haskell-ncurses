@@ -1,5 +1,5 @@
 name: ncurses
-version: 0.1.0.2
+version: 0.1.0.3
 synopsis: Modernised bindings to GNU ncurses
 license: GPL-3
 license-file: license.txt
@@ -13,6 +13,7 @@ stability: experimental
 bug-reports: mailto:jmillikin@gmail.com
 homepage: http://john-millikin.com/software/bindings/ncurses/
 tested-with: GHC==6.12.1
+extra-source-files: hsncurses-shim.h
 
 source-repository head
   type: bazaar
@@ -35,6 +36,9 @@ library
     c2hs >= 0.15
 
   extra-libraries: panel ncursesw
+
+  c-sources: hsncurses-shim.c
+  include-dirs: .
 
   exposed-modules:
     UI.NCurses
