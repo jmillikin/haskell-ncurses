@@ -179,17 +179,16 @@ runCurses :: Curses a -> IO a
 runCurses = bracket_ initCurses {# call endwin #} . unCurses where
 	allEvents = fromInteger (E.fromEnum E.ALL_MOUSE_EVENTS)
 	initCurses = do
-		{# call initscr #}
-		{# call cbreak #}
-		{# call mousemask #} allEvents nullPtr
+		void {# call initscr #}
+		void {# call cbreak #}
+		void $ {# call mousemask #} allEvents nullPtr
 		hasColor <- {# call has_colors #}
 		when (hasColor == 1) $ do
-			{# call start_color #}
-			{# call use_default_colors #}
-			return ()
+			void {# call start_color #}
+			void {# call use_default_colors #}
 		stdscr <- peek c_stdscr
-		{# call keypad #} (Window stdscr) 1
-		{# call meta #} (Window stdscr) 1
+		void $ {# call keypad #} (Window stdscr) 1
+		void $ {# call meta #} (Window stdscr) 1
 		{# call wtimeout #} (Window stdscr) (- 1)
 
 -- | The default window created when @ncurses@ is initialized, also known
@@ -224,8 +223,8 @@ newWindow rows cols x y = Curses $ do
 	if windowPtr win == nullPtr
 		then error "newWindow: newwin() returned NULL"
 		else do
-			{# call keypad #} win 1
-			{# call meta #} win 1
+			void $ {# call keypad #} win 1
+			void $ {# call meta #} win 1
 			{# call wtimeout #} win (- 1)
 			return win
 
@@ -510,7 +509,7 @@ withGlyph (Just (Glyph char attrs)) io =
 	let cAttrs = foldl' (\acc a -> acc .|. attrToInt a) 0 attrs in
 	
 	allocaBytes {# sizeof cchar_t #} $ \pBuf -> do
-	{# call memset #} (castPtr pBuf) 0 {# sizeof cchar_t #}
+	void $ {# call memset #} (castPtr pBuf) 0 {# sizeof cchar_t #}
 	{# set cchar_t->attr #} pBuf cAttrs
 	{# set cchar_t->chars #} pBuf (wordPtrToPtr (fromIntegral (ord char)))
 	io (CCharT pBuf)
