@@ -190,6 +190,7 @@ runCurses = bracket_ initCurses {# call endwin #} . unCurses where
 		stdscr <- peek c_stdscr
 		{# call keypad #} (Window stdscr) 1
 		{# call meta #} (Window stdscr) 1
+		{# call wtimeout #} (Window stdscr) (- 1)
 
 -- | The default window created when @ncurses@ is initialized, also known
 -- as @stdscr@.
@@ -225,6 +226,7 @@ newWindow rows cols x y = Curses $ do
 		else do
 			{# call keypad #} win 1
 			{# call meta #} win 1
+			{# call wtimeout #} win (- 1)
 			return win
 
 -- | Close a window, and free all resources associated with it. Once a
@@ -665,13 +667,26 @@ data Event
 	| EventUnknown Integer
 	deriving (Show, Eq)
 
--- | Get the next 'Event' from a given window. This blocks until an event
--- is received.
-getEvent :: Window -> Curses Event
-getEvent win = Curses io where
+-- | Get the next 'Event' from a given window.
+--
+-- If the timeout is specified, and no event is received within the timeout,
+-- @getEvent@ returns 'Nothing'. If the timeout is 0 or less, @getEvent@
+-- will not block at all.
+getEvent :: Window
+         -> Maybe Integer -- ^ Timeout, in milliseconds
+         -> Curses (Maybe Event)
+getEvent win timeout = Curses io where
 	io = alloca $ \ptr -> do
+		{# call wtimeout #} win $ case timeout of
+			Nothing -> -1
+			Just n | n <= 0 -> 0
+			Just n -> fromInteger n
 		rc <- {# call wget_wch #} win ptr
-		checkRC "getEvent" rc
+		if toInteger rc == E.fromEnum E.ERR
+			then return Nothing
+			else fmap Just (parseCode ptr rc)
+
+	parseCode ptr rc = do
 		code <- toInteger `fmap` peek ptr
 		if rc == 0
 			then return (charEvent code)
