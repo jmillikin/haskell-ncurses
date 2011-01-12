@@ -1,5 +1,5 @@
 name: ncurses
-version: 0.1.0.3
+version: 0.2
 synopsis: Modernised bindings to GNU ncurses
 license: GPL-3
 license-file: license.txt
