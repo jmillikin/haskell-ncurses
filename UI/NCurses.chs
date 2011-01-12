@@ -180,6 +180,7 @@ runCurses = bracket_ initCurses {# call endwin #} . unCurses where
 	allEvents = fromInteger (E.fromEnum E.ALL_MOUSE_EVENTS)
 	initCurses = do
 		{# call initscr #}
+		{# call cbreak #}
 		{# call mousemask #} allEvents nullPtr
 		hasColor <- {# call has_colors #}
 		when (hasColor == 1) $ do
