@@ -45,6 +45,7 @@ module UI.NCurses
 	, render
 	, moveCursor
 	, setColor
+	, drawString
 	, drawText
 	, drawBorder
 	, drawBox
@@ -274,6 +275,11 @@ moveCursor :: Integer -- ^ Row
            -> Update ()
 moveCursor y x = withWindow_ "moveCursor" $ \win ->
 	{# call wmove #} win (fromInteger y) (fromInteger x)
+
+-- | Add some text to the window, at the current cursor position.
+drawString :: String -> Update ()
+drawString str = withWindow_ "drawString" $ \win ->
+	withCWString str ({# call waddwstr #} win)
 
 -- | Add some text to the window, at the current cursor position.
 drawText :: T.Text -> Update ()
