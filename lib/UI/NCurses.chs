@@ -155,7 +155,6 @@ import qualified UI.NCurses.Enums as E
 #define NCURSES_NOMACROS
 #include <string.h>
 #include <ncursesw/curses.h>
-#include <hsncurses-shim.h>
 
 import Foreign hiding (shift)
 import Foreign.C
@@ -1012,7 +1011,10 @@ flash = Curses ({# call flash as c_flash #} >>= checkRC "flash")
 
 -- | Check if the terminal has a mouse
 hasMouse :: Curses Bool
-hasMouse = Curses (fmap cToBool {# call hsncurses_has_mouse #})
+hasMouse = Curses (fmap cToBool c_hasMouse)
+
+foreign import ccall unsafe "hsncurses_has_mouse"
+	c_hasMouse :: IO CInt
 
 -- | Check if some position is contained within the given 'Window'.
 enclosed :: Window
