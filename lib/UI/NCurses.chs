@@ -1,5 +1,5 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
------------------------------------------------------------------------------
+
 -- Copyright (C) 2010 John Millikin <jmillikin@gmail.com>
 --
 -- This program is free software: you can redistribute it and/or modify
@@ -14,16 +14,7 @@
 --
 -- You should have received a copy of the GNU General Public License
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
------------------------------------------------------------------------------
--- |
--- Module: UI.NCurses
--- Copyright: 2010 John Millikin
--- License: GPL-3
---
--- Maintainer: jmillikin@gmail.com
--- Portability: portable (requires FFI)
---
------------------------------------------------------------------------------
+
 module UI.NCurses
 	(
 	-- * Primary types
@@ -141,28 +132,27 @@ module UI.NCurses
 	, setKeypad
 	, getCursor
 	) where
--- Imports {{{
-import Control.Exception (bracket_)
-import Control.Monad (when, unless)
+
+import           Control.Exception (bracket_)
+import           Control.Monad (when, unless)
 import qualified Control.Monad.Trans.Reader as R
-import Data.Char (chr, ord)
-import Data.List (foldl')
-import Data.Maybe (catMaybes)
+import           Data.Char (chr, ord)
+import           Data.List (foldl')
+import           Data.Maybe (catMaybes)
 import qualified Data.Map as M
 import qualified Data.Text as T
-import UI.NCurses.Types
-import qualified UI.NCurses.Enums as E
--- }}}
+import           Foreign hiding (shift)
+import           Foreign.C
 
--- c2hs setup {{{
+
+import qualified UI.NCurses.Enums as E
+import           UI.NCurses.Types
+
 #define NCURSES_ENABLE_STDBOOL_H 0
 #define _XOPEN_SOURCE_EXTENDED
 #define NCURSES_NOMACROS
 #include <string.h>
 #include <ncursesw/curses.h>
-
-import Foreign hiding (shift)
-import Foreign.C
 
 {# pointer *WINDOW as Window nocode #}
 {# pointer *cchar_t as CCharT newtype #}
@@ -170,9 +160,6 @@ import Foreign.C
 
 type AttrT = {# type attr_t #}
 type MMaskT = {# type mmask_t #}
--- }}}
-
--- Initialization {{{
 
 -- | Put the terminal in graphical mode, including enabling special keys,
 -- colors, and mouse events (if supported).
@@ -202,10 +189,6 @@ defaultWindow = Curses (Window `fmap` peek c_stdscr)
 
 foreign import ccall "static &stdscr"
 	c_stdscr :: Ptr (Ptr Window)
-
--- }}}
-
--- Window management {{{
 
 -- | Create a new 'Window', with the given dimensions. To create a
 -- fullscreen window, use @'newWindow' 0 0 0 0@.
@@ -248,10 +231,6 @@ cloneWindow old = Curses $ do
 	if windowPtr win == nullPtr
 		then error "cloneWindow: dupwin() returned NULL"
 		else return win
-
--- }}}
-
--- Drawing to the screen {{{
 
 -- | Apply a window update to the window. After all of an
 -- application&#x2019;s windows have been updated, call 'render' to update
@@ -339,10 +318,6 @@ setBackground g = withWindow_ "setBackground" $ \win ->
 	withGlyph (Just g) $ \pChar ->
 	{# call wbkgrndset #} win pChar >> return 0
 
--- }}}
-
--- Attributes {{{
-
 data Attribute
 	= AttributeStandout
 	| AttributeUnderline
@@ -386,10 +361,6 @@ setAttributes attrs = withWindow_ "setAttributes" $ \win ->
 	{# call wattr_get #} win nullPtr pPair nullPtr >>= checkRC "setAttributes"
 	colorPair <- peek pPair
 	{# call wattr_set #} win cint colorPair nullPtr
-
--- }}}
-
--- Colors {{{
 
 data Color
 	= ColorBlack
@@ -500,10 +471,6 @@ maxColorID = Curses $ do
 foreign import ccall "static &COLOR_PAIRS"
 	c_COLOR_PAIRS :: Ptr CInt
 
--- }}}
-
--- Glyphs {{{
-
 -- | A glyph is a character, typically spacing, combined with a set of
 -- attributes.
 data Glyph = Glyph
@@ -522,8 +489,6 @@ withGlyph (Just (Glyph char attrs)) io =
 	{# set cchar_t->attr #} pBuf cAttrs
 	{# set cchar_t->chars #} pBuf (wordPtrToPtr (fromIntegral (ord char)))
 	io (CCharT pBuf)
-
--- VT100 drawing glyphs {{{
 
 -- | Upper left corner
 glyphCornerUL :: Glyph
@@ -597,10 +562,6 @@ glyphPlusMinus = Glyph '\xb1' []
 glyphBullet :: Glyph
 glyphBullet = Glyph '\xb7' []
 
--- }}}
-
--- Teletype 5410v1 symbols {{{
-
 -- | Arrow pointing left
 glyphArrowL :: Glyph
 glyphArrowL = Glyph '\x2190' []
@@ -629,10 +590,6 @@ glyphLantern = Glyph '\x2603' []
 glyphBlock :: Glyph
 glyphBlock = Glyph '\x25AE' []
 
--- }}}
-
--- Other glyphs {{{
-
 -- | Scan line 3
 glyphS3 :: Glyph
 glyphS3 = Glyph '\x23BB' []
@@ -660,12 +617,6 @@ glyphPi = Glyph '\x3c0' []
 -- | UK pounds sterling symbol
 glyphSterling :: Glyph
 glyphSterling = Glyph '\xa3' []
-
--- }}}
-
--- }}}
-
--- Event handling {{{
 
 data Event
 	= EventCharacter Char
@@ -725,8 +676,6 @@ getEvent win timeout = Curses io where
 		else case M.lookup code keyMap of
 			Just key -> EventSpecialKey key
 			Nothing -> EventUnknown code
-
--- Keyboard events {{{
 
 data Key
 	= KeyUpArrow
@@ -906,10 +855,6 @@ keyMap = M.fromList $ map (\(enum, key) -> (E.fromEnum enum, key))
 	, (E.KEY_UNDO, KeyUndo)
 	]
 
--- }}}
-
--- Mouse events {{{
-
 data ButtonState
 	= ButtonPressed
 	| ButtonReleased
@@ -985,12 +930,6 @@ parseMouseState mask = MouseState (0, 0, 0) buttons alt shift ctrl where
 	button5 = Nothing
 #endif
 
--- }}}
-
--- }}}
-
--- Cursor mode {{{
-
 data CursorMode
 	= CursorInvisible
 	| CursorVisible
@@ -1014,10 +953,6 @@ setCursorMode mode = Curses $ do
 		1 -> CursorVisible
 		2 -> CursorVeryVisible
 		_ -> CursorModeUnknown rc
-
--- }}}
-
--- misc {{{
 
 -- | Runs @raw()@ or @noraw()@
 setRaw :: Bool -> Curses ()
@@ -1105,14 +1040,8 @@ getCursor win = Curses $ do
 	col <- {# call getcurx #} win
 	return (toInteger row, toInteger col)
 
--- }}}
-
--- Utility {{{
-
 withWindow :: (Window -> IO a) -> Update a
 withWindow io = Update (R.ReaderT (\win -> Curses (io win)))
 
 withWindow_ :: String -> (Window -> IO CInt) -> Update ()
 withWindow_ name io = withWindow $ \win -> io win >>= checkRC name
-
--- }}}

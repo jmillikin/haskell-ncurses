@@ -1,4 +1,3 @@
------------------------------------------------------------------------------
 -- Copyright (C) 2010 John Millikin <jmillikin@gmail.com>
 --
 -- This program is free software: you can redistribute it and/or modify
@@ -13,18 +12,18 @@
 --
 -- You should have received a copy of the GNU General Public License
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
------------------------------------------------------------------------------
+
 module UI.NCurses.Types where
+
 import qualified Control.Applicative as A
-import Control.Monad (liftM, ap)
-import Control.Monad.Fix (MonadFix, mfix)
-import Control.Monad.IO.Class (MonadIO, liftIO)
-import Control.Monad.Trans.Reader (ReaderT)
+import           Control.Monad (liftM, ap)
+import           Control.Monad.Fix (MonadFix, mfix)
+import           Control.Monad.IO.Class (MonadIO, liftIO)
+import           Control.Monad.Trans.Reader (ReaderT)
 import qualified Foreign as F
 import qualified Foreign.C as F
-import qualified UI.NCurses.Enums as E
 
--- newtype Curses {{{
+import qualified UI.NCurses.Enums as E
 
 -- | A small wrapper around 'IO', to ensure the @ncurses@ library is
 -- initialized while running.
@@ -47,10 +46,6 @@ instance A.Applicative Curses where
 	pure = return
 	(<*>) = ap
 
--- }}}
-
--- newtype Update {{{
-
 newtype Update a = Update { unUpdate :: ReaderT Window Curses a }
 
 instance Monad Update where
@@ -66,8 +61,6 @@ instance Functor Update where
 instance A.Applicative Update where
 	pure = return
 	(<*>) = ap
-
--- }}}
 
 newtype Window = Window { windowPtr :: F.Ptr Window }
 
