@@ -1,5 +1,5 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
------------------------------------------------------------------------------
+
 -- Copyright (C) 2010 John Millikin <jmillikin@gmail.com>
 --
 -- This program is free software: you can redistribute it and/or modify
@@ -14,16 +14,7 @@
 --
 -- You should have received a copy of the GNU General Public License
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
------------------------------------------------------------------------------
--- |
--- Module: UI.NCurses.Panel
--- Copyright: 2010 John Millikin
--- License: GPL-3
---
--- Maintainer: jmillikin@gmail.com
--- Portability: portable (requires FFI)
---
------------------------------------------------------------------------------
+
 module UI.NCurses.Panel
 	( Panel
 	, newPanel
@@ -42,12 +33,12 @@ module UI.NCurses.Panel
 	, getPanelWindow
 	, replacePanelWindow
 	) where
-import Foreign
-import Foreign.C
-import UI.NCurses.Types
 
--- for haddock
-import UI.NCurses (render)
+import           Foreign
+import           Foreign.C
+
+import           UI.NCurses (render) -- for haddock
+import           UI.NCurses.Types
 
 #include <ncursesw/panel.h>
 

@@ -1,4 +1,3 @@
------------------------------------------------------------------------------
 -- Copyright (C) 2010 John Millikin <jmillikin@gmail.com>
 --
 -- This program is free software: you can redistribute it and/or modify
@@ -13,13 +12,13 @@
 --
 -- You should have received a copy of the GNU General Public License
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
------------------------------------------------------------------------------
-module UI.NCurses.Enums where
 
--- this module is a hack to work around c2hs's lack of #define hooks.
+-- | This module is a hack to work around c2hs's lack of #define hooks.
 -- the idea is to create a new class 'Enum' which uses 'Integer' instead
 -- of 'Int', so integral defines of any size can be retrieved.
-import Prelude (Integer, error, show, (++))
+module UI.NCurses.Enums where
+
+import           Prelude (Integer, error, show, (++))
 
 #define NCURSES_ENABLE_STDBOOL_H 0
 #define _XOPEN_SOURCE_EXTENDED
