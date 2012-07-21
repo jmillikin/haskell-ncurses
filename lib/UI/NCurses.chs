@@ -122,6 +122,10 @@ module UI.NCurses
 	, ButtonState (..)
 	, MouseState (..)
 	
+	-- * Cursor mode
+	, CursorMode(CursorInvisible, CursorVisible, CursorVeryVisible)
+	, setCursorMode
+	
 	-- * misc
 	, setRaw
 	, setCBreak
@@ -982,6 +986,34 @@ parseMouseState mask = MouseState (0, 0, 0) buttons alt shift ctrl where
 #endif
 
 -- }}}
+
+-- }}}
+
+-- Cursor mode {{{
+
+data CursorMode
+	= CursorInvisible
+	| CursorVisible
+	| CursorVeryVisible
+	| CursorModeUnknown CInt
+	deriving (Eq, Show)
+
+-- | Set the current cursor mode to visible, invisible, or \"very visible\".
+-- The previous cursor mode is returned.
+setCursorMode :: CursorMode -> Curses CursorMode
+setCursorMode mode = Curses $ do
+	let intMode = case mode of
+		CursorInvisible -> 0
+		CursorVisible -> 1
+		CursorVeryVisible -> 2
+		CursorModeUnknown n -> n
+	rc <- {# call curs_set #} intMode
+	checkRC "setCursorMode" rc
+	return $ case rc of
+		0 -> CursorInvisible
+		1 -> CursorVisible
+		2 -> CursorVeryVisible
+		_ -> CursorModeUnknown rc
 
 -- }}}
 
