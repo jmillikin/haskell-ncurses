@@ -71,7 +71,9 @@ library
   build-tools:
     c2hs >= 0.15
 
-  extra-libraries: panel ncursesw
+  -- Do not use pkg-config to find ncurses libraries, because the .pc files
+  -- are missing or broken in many installations.
+  extra-libraries: panelw ncursesw
 
   c-sources: cbits/hsncurses-shim.c
 
