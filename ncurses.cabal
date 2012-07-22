@@ -34,7 +34,7 @@ description:
   &#x20;       drawString \"(press q to quit)\"
   &#x20;       moveCursor 0 0
   &#x20;   render
-  &#x20;   waitFor w (\ev -> ev == EventCharacter \'q\' || ev == EventCharacter \'Q\')
+  &#x20;   waitFor w (\\ev -> ev == EventCharacter \'q\' || ev == EventCharacter \'Q\')
   .
   waitFor :: Window -> (Event -> Bool) -> Curses ()
   waitFor w p = loop where
