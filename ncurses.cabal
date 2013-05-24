@@ -73,7 +73,13 @@ library
 
   -- Do not use pkg-config to find ncurses libraries, because the .pc files
   -- are missing or broken in many installations.
-  extra-libraries: panelw ncursesw
+  if os(darwin)
+    -- MacOS has a version of ncurses where the narrow- and wide-character
+    -- builds have been merged into a single header/dylib.
+    cc-options: -DHSNCURSES_NARROW_HEADER
+    extra-libraries: panel ncurses
+  else
+    extra-libraries: panelw ncursesw
 
   c-sources: cbits/hsncurses-shim.c
 

@@ -152,7 +152,12 @@ import           UI.NCurses.Types
 #define _XOPEN_SOURCE_EXTENDED
 #define NCURSES_NOMACROS
 #include <string.h>
-#include <ncursesw/curses.h>
+
+#ifdef HSNCURSES_NARROW_HEADER
+#include <ncurses.h>
+#else
+#include <ncursesw/ncurses.h>
+#endif
 
 {# pointer *WINDOW as Window nocode #}
 {# pointer *cchar_t as CCharT newtype #}

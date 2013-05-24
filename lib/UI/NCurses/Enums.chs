@@ -23,7 +23,12 @@ import           Prelude (Integer, error, show, (++))
 #define NCURSES_ENABLE_STDBOOL_H 0
 #define _XOPEN_SOURCE_EXTENDED
 #define NCURSES_NOMACROS
-#include <ncursesw/curses.h>
+
+#ifdef HSNCURSES_NARROW_HEADER
+#include <ncurses.h>
+#else
+#include <ncursesw/ncurses.h>
+#endif
 
 class Enum a where
 	toEnum :: Integer -> a
