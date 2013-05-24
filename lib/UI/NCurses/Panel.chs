@@ -40,7 +40,11 @@ import           Foreign.C
 import           UI.NCurses (render) -- for haddock
 import           UI.NCurses.Types
 
+#ifdef HSNCURSES_NARROW_HEADER
+#include <panel.h>
+#else
 #include <ncursesw/panel.h>
+#endif
 
 {# pointer *PANEL as Panel nocode #}
 {# pointer *WINDOW as Window nocode #}
