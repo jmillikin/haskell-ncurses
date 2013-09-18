@@ -149,6 +149,21 @@ import qualified UI.NCurses.Enums as E
 import           UI.NCurses.Types
 
 #include <string.h>
+
+-- Note: c2hs has a hard time with the ncurses macros, and will choke on
+-- waddwstr() if NCURSES_NOMACROS is not defined prior to including
+-- ncurses.h in this file.
+--
+-- Transitive includes from hsncurses-shim.h are not sufficient.
+#define NCURSES_ENABLE_STDBOOL_H 0
+#define _XOPEN_SOURCE_EXTENDED
+#define NCURSES_NOMACROS
+#ifdef HSNCURSES_NARROW_HEADER
+#include <ncurses.h>
+#else
+#include <ncursesw/ncurses.h>
+#endif
+
 #include "cbits/hsncurses-shim.h"
 
 {# pointer *WINDOW as Window nocode #}
