@@ -1,5 +1,5 @@
 name: ncurses
-version: 0.2.4
+version: 0.2.5
 license: GPL-3
 license-file: license.txt
 author: John Millikin <jmillikin@gmail.com>
@@ -50,13 +50,13 @@ extra-source-files:
   cbits/hsncurses-shim.h
 
 source-repository head
-  type: bazaar
-  location: https://john-millikin.com/branches/haskell-ncurses/0.2/
+  type: git
+  location: https://john-millikin.com/code/haskell-ncurses/
 
-source-repository head
-  type: bazaar
-  location: https://john-millikin.com/branches/haskell-ncurses/0.2/
-  tag: haskell-ncurses_0.2.4
+source-repository this
+  type: git
+  location: https://john-millikin.com/code/haskell-ncurses/
+  tag: haskell-ncurses_0.2.5
 
 library
   hs-source-dirs: lib
