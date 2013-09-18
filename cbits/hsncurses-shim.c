@@ -1,13 +1,7 @@
-#define NCURSES_ENABLE_STDBOOL_H 0
-#define _XOPEN_SOURCE_EXTENDED
-#define NCURSES_NOMACROS
+#include <signal.h>
 #include <string.h>
 
-#ifdef HSNCURSES_NARROW_HEADER
-#include <ncurses.h>
-#else
-#include <ncursesw/ncurses.h>
-#endif
+#include "hsncurses-shim.h"
 
 #if NCURSES_VERSION_PATCH < 20081122
 int _nc_has_mouse();
@@ -20,4 +14,26 @@ int hsncurses_has_mouse()
 #else
 	return _nc_has_mouse();
 #endif
+}
+
+int hsncurses_wget_wch(WINDOW *w, wint_t *out) {
+	/*
+	Haskell's runtime system uses alarm signals to implement thread
+	scheduling. These signals can interrupt system calls such as accept().
+	ncurses doesn't handle interrupted system calls gracefully, so all
+	the alarms can cause wget_wch() to return much earlier than expected.
+	
+	As a workaround, we block alarms for the duration of wget_wch().
+	*/
+	int rc;
+	sigset_t signal_alarm, old_mask;
+	
+	sigemptyset(&signal_alarm);
+	sigaddset(&signal_alarm, SIGALRM);
+	sigaddset(&signal_alarm, SIGVTALRM);
+	
+	pthread_sigmask(SIG_BLOCK, &signal_alarm, &old_mask);
+	rc = wget_wch(w, out);
+	pthread_sigmask(SIG_SETMASK, &old_mask, NULL);
+	return rc;
 }

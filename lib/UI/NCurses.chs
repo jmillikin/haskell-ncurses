@@ -148,16 +148,8 @@ import           Foreign.C
 import qualified UI.NCurses.Enums as E
 import           UI.NCurses.Types
 
-#define NCURSES_ENABLE_STDBOOL_H 0
-#define _XOPEN_SOURCE_EXTENDED
-#define NCURSES_NOMACROS
 #include <string.h>
-
-#ifdef HSNCURSES_NARROW_HEADER
-#include <ncurses.h>
-#else
-#include <ncursesw/ncurses.h>
-#endif
+#include "cbits/hsncurses-shim.h"
 
 {# pointer *WINDOW as Window nocode #}
 {# pointer *cchar_t as CCharT newtype #}
@@ -645,7 +637,7 @@ getEvent win timeout = Curses io where
 			Nothing -> -1
 			Just n | n <= 0 -> 0
 			Just n -> fromInteger n
-		rc <- {# call wget_wch #} win ptr
+		rc <- {# call hsncurses_wget_wch #} win ptr
 		if toInteger rc == E.fromEnum E.ERR
 			then return Nothing
 			else fmap Just (parseCode ptr rc)

@@ -61,6 +61,7 @@ source-repository head
 library
   hs-source-dirs: lib
   ghc-options: -Wall -O2
+  include-dirs: .
 
   build-depends:
       base >= 4.0 && < 5.0
