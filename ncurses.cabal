@@ -1,5 +1,5 @@
 name: ncurses
-version: 0.2.6
+version: 0.2.7
 license: GPL-3
 license-file: license.txt
 author: John Millikin <jmillikin@gmail.com>
@@ -56,7 +56,7 @@ source-repository head
 source-repository this
   type: git
   location: https://john-millikin.com/code/haskell-ncurses/
-  tag: haskell-ncurses_0.2.6
+  tag: haskell-ncurses_0.2.7
 
 library
   hs-source-dirs: lib
@@ -74,13 +74,16 @@ library
 
   -- Do not use pkg-config to find ncurses libraries, because the .pc files
   -- are missing or broken in many installations.
+  --
+  -- Explicitly linking against libpthread.so fixes a build problem on
+  -- platforms where the linker doesn't automatically follow dependencies.
   if os(darwin)
     -- MacOS has a version of ncurses where the narrow- and wide-character
     -- builds have been merged into a single header/dylib.
     cc-options: -DHSNCURSES_NARROW_HEADER
-    extra-libraries: panel ncurses
+    extra-libraries: panel ncurses pthread
   else
-    extra-libraries: panelw ncursesw
+    extra-libraries: panelw ncursesw pthread
 
   c-sources: cbits/hsncurses-shim.c
 
