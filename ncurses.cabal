@@ -66,6 +66,14 @@ flag use-pkgconfig
   description:
     Use pkg-config to set linker and include flags.
 
+flag force-narrow-library
+  default: False
+  manual: True
+  description:
+    Force including and linking against ncurses instead of ncursesw. This is
+    only useful on systems that have the ncursesw package installed
+    incorrectly. On most systems this will cause compile- or run-time errors.
+
 library
   hs-source-dirs: lib
   ghc-options: -Wall -O2
@@ -81,14 +89,18 @@ library
     c2hs >= 0.15
 
   if flag(use-pkgconfig)
-    pkgconfig-depends: ncursesw panelw
+    if flag(force-narrow-library)
+      cc-options: -DHSNCURSES_NARROW_HEADER
+      pkgconfig-depends: ncurses, panel
+    else
+      pkgconfig-depends: ncursesw, panelw
   else
     -- MacOS has a version of ncurses where the narrow- and wide-character
     -- builds have been merged into a single header/dylib.
     --
     -- Explicitly linking against libpthread.so fixes a build problem on
     -- platforms where the linker doesn't automatically follow dependencies.
-    if os(darwin)
+    if os(darwin) || flag(force-narrow-library)
       cc-options: -DHSNCURSES_NARROW_HEADER
       extra-libraries: panel ncurses pthread
     else
