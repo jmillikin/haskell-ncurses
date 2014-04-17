@@ -58,6 +58,14 @@ source-repository this
   location: https://john-millikin.com/code/haskell-ncurses/
   tag: haskell-ncurses_0.2.7
 
+-- Do not use default to using pkg-config to find ncurses libraries, because
+-- the .pc files are missing or broken in many installations.
+flag use-pkgconfig
+  default: False
+  manual: True
+  description:
+    Use pkg-config to set linker and include flags.
+
 library
   hs-source-dirs: lib
   ghc-options: -Wall -O2
@@ -72,18 +80,19 @@ library
   build-tools:
     c2hs >= 0.15
 
-  -- Do not use pkg-config to find ncurses libraries, because the .pc files
-  -- are missing or broken in many installations.
-  --
-  -- Explicitly linking against libpthread.so fixes a build problem on
-  -- platforms where the linker doesn't automatically follow dependencies.
-  if os(darwin)
+  if flag(use-pkgconfig)
+    pkgconfig-depends: ncursesw panelw
+  else
     -- MacOS has a version of ncurses where the narrow- and wide-character
     -- builds have been merged into a single header/dylib.
-    cc-options: -DHSNCURSES_NARROW_HEADER
-    extra-libraries: panel ncurses pthread
-  else
-    extra-libraries: panelw ncursesw pthread
+    --
+    -- Explicitly linking against libpthread.so fixes a build problem on
+    -- platforms where the linker doesn't automatically follow dependencies.
+    if os(darwin)
+      cc-options: -DHSNCURSES_NARROW_HEADER
+      extra-libraries: panel ncurses pthread
+    else
+      extra-libraries: panelw ncursesw pthread
 
   c-sources: cbits/hsncurses-shim.c
 
