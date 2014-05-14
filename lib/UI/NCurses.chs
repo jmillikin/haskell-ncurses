@@ -148,7 +148,7 @@ import           Foreign.C
 import qualified UI.NCurses.Enums as E
 import           UI.NCurses.Types
 
-#include <string.h>
+#include "cbits/mavericks-c2hs-workaround.h"
 
 -- Note: c2hs has a hard time with the ncurses macros, and will choke on
 -- waddwstr() if NCURSES_NOMACROS is not defined prior to including

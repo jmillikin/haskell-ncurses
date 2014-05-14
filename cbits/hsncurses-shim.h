@@ -1,3 +1,6 @@
+#ifndef HASKELL_NCURSES_SHIM_H
+#define HASKELL_NCURSES_SHIM_H
+
 #include <wchar.h>
 
 #define NCURSES_ENABLE_STDBOOL_H 0
@@ -13,3 +16,5 @@
 int hsncurses_has_mouse();
 
 int hsncurses_wget_wch(WINDOW *, wint_t *);
+
+#endif

@@ -40,6 +40,8 @@ import           Foreign.C
 import           UI.NCurses (render) -- for haddock
 import           UI.NCurses.Types
 
+#include "cbits/mavericks-c2hs-workaround.h"
+
 #ifdef HSNCURSES_NARROW_HEADER
 #include <panel.h>
 #else

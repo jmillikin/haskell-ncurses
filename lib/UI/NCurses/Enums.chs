@@ -20,6 +20,8 @@ module UI.NCurses.Enums where
 
 import           Prelude (Integer, error, show, (++))
 
+#include "cbits/mavericks-c2hs-workaround.h"
+
 #define NCURSES_ENABLE_STDBOOL_H 0
 #define _XOPEN_SOURCE_EXTENDED
 #define NCURSES_NOMACROS
