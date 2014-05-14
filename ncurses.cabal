@@ -100,8 +100,9 @@ library
     --
     -- Explicitly linking against libpthread.so fixes a build problem on
     -- platforms where the linker doesn't automatically follow dependencies.
-    if os(darwin) || flag(force-narrow-library)
+    if os(darwin) || os(freebsd) || flag(force-narrow-library)
       cc-options: -DHSNCURSES_NARROW_HEADER
+    if os(darwin) || flag(force-narrow-library)
       extra-libraries: panel ncurses pthread
     else
       extra-libraries: panelw ncursesw pthread
