@@ -91,6 +91,7 @@ enum hsncurses_Color
 , hsncurses_COLOR_MAGENTA = COLOR_MAGENTA
 , hsncurses_COLOR_CYAN = COLOR_CYAN
 , hsncurses_COLOR_WHITE = COLOR_WHITE
+, hsncurses_COLOR_DEFAULT = -1
 };
 #endc
 

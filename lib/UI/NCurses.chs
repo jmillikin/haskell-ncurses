@@ -400,6 +400,12 @@ data Color
 	| ColorMagenta
 	| ColorCyan
 	| ColorWhite
+
+	-- | An unspecified default terminal color, for terminals that support
+	-- ISO/IEC 6429 escape sequences (or equivalent).
+	--
+	-- This is most useful for terminals with translucent backgrounds.
+	| ColorDefault
 	deriving (Show, Eq)
 
 -- | A wrapper around 'Integer' to ensure clients don&#x2019;t use an
@@ -420,6 +426,7 @@ colorToShort x = case x of
 	ColorMagenta -> colorEnum E.COLOR_MAGENTA
 	ColorCyan    -> colorEnum E.COLOR_CYAN
 	ColorWhite   -> colorEnum E.COLOR_WHITE
+	ColorDefault -> colorEnum E.COLOR_DEFAULT
 
 -- | Check if the terminal supports color. If it doesn&#x2019;t,
 -- alternative indicators (such as underlines or bold) should be used.
