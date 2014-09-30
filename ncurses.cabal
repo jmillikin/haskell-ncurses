@@ -127,4 +127,5 @@ library
 
   other-modules:
     UI.NCurses.Enums
+    UI.NCurses.Compat
     UI.NCurses.Types

@@ -141,11 +141,11 @@ import           Data.List (foldl')
 import           Data.Maybe (catMaybes)
 import qualified Data.Map as M
 import qualified Data.Text as T
-import           Foreign hiding (shift)
+import           Foreign hiding (shift, void)
 import           Foreign.C
 
-
 import qualified UI.NCurses.Enums as E
+import           UI.NCurses.Compat
 import           UI.NCurses.Types
 
 #include "cbits/mavericks-c2hs-workaround.h"
