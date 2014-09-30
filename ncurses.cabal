@@ -1,5 +1,5 @@
 name: ncurses
-version: 0.2.10
+version: 0.2.11
 license: GPL-3
 license-file: license.txt
 author: John Millikin <jmillikin@gmail.com>
@@ -17,7 +17,7 @@ description:
   pseudo-graphical interfaces. This package is a nice, modern binding
   to GNU ncurses.
   .
-  The following example is a program that display the message
+  The following example is a program that displays the message
   \"Hello world!\" until the user hits Q:
   .
   @
@@ -57,7 +57,7 @@ source-repository head
 source-repository this
   type: git
   location: https://john-millikin.com/code/haskell-ncurses/
-  tag: haskell-ncurses_0.2.10
+  tag: haskell-ncurses_0.2.11
 
 -- Do not use default to using pkg-config to find ncurses libraries, because
 -- the .pc files are missing or broken in many installations.
