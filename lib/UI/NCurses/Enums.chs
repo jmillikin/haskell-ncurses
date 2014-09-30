@@ -18,7 +18,7 @@
 -- of 'Int', so integral defines of any size can be retrieved.
 module UI.NCurses.Enums where
 
-import           Prelude (Integer, error, show, (++))
+import           Prelude (Integer, error, show, (++), compare, Ordering(..))
 
 #include "cbits/mavericks-c2hs-workaround.h"
 
@@ -35,6 +35,23 @@ import           Prelude (Integer, error, show, (++))
 class Enum a where
 	toEnum :: Integer -> a
 	fromEnum :: a -> Integer
+
+	-- c2hs 0.18.1 additionally defines these in its Enum instances,
+	-- but we don't use them.
+	pred, succ :: a -> a
+	pred = error "ncurses Enum: pred"
+	succ = error "ncurses Enum: succ"
+	
+	enumFrom :: a -> [a]
+	enumFrom = error "ncurses Enum: enumFrom"
+	enumFromThen :: a -> a -> [a]
+	enumFromThen = error "ncurses Enum: enumFromThen"
+	enumFromTo :: a -> a -> [a]
+	enumFromTo = error "ncurses Enum: enumFromTo"
+	enumFromThenTo :: a -> a -> a -> [a]
+	enumFromThenTo = error "ncurses Enum: enumFromThenTo"
+
+
 
 -- misc enums
 #c

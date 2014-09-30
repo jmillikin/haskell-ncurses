@@ -166,6 +166,23 @@ import           UI.NCurses.Types
 
 #include "cbits/hsncurses-shim.h"
 
+-- Starting with version 0.18.1, c2hs changed the handling of get/set hooks
+-- when using newtype'd pointers: <https://github.com/haskell/c2hs/issues/96>.
+--
+-- Version 0.18.2 introduced the C2HS_MIN_VERSION macro to perform
+-- version detection: <https://github.com/haskell/c2hs/issues/107>.
+--
+-- Detecting version 0.18.1 is impractical, so we depend on a Cabal flag for
+-- users who need that particular version.
+#if !defined(HSNCURSES_NEWTYPE_POINTER_HOOKS)
+#if !defined(C2HS_MIN_VERSION)
+#define C2HS_MIN_VERSION(mj,mn,rv) (mj<=0&&mn<=18&&rv<=0)
+#endif
+#if C2HS_MIN_VERSION(0,18,1)
+#define HSNCURSES_NEWTYPE_POINTER_HOOKS
+#endif
+#endif
+
 {# pointer *WINDOW as Window nocode #}
 {# pointer *cchar_t as CCharT newtype #}
 {# pointer *wchar_t as CWString nocode #}
@@ -498,8 +515,13 @@ withGlyph (Just (Glyph char attrs)) io =
 	
 	allocaBytes {# sizeof cchar_t #} $ \pBuf -> do
 	void $ {# call memset #} (castPtr pBuf) 0 {# sizeof cchar_t #}
+#ifdef HSNCURSES_NEWTYPE_POINTER_HOOKS
+	{# set cchar_t->attr #} (CCharT pBuf) cAttrs
+	{# set cchar_t->chars #} (CCharT pBuf) (wordPtrToPtr (fromIntegral (ord char)))
+#else
 	{# set cchar_t->attr #} pBuf cAttrs
 	{# set cchar_t->chars #} pBuf (wordPtrToPtr (fromIntegral (ord char)))
+#endif
 	io (CCharT pBuf)
 
 -- | Upper left corner
