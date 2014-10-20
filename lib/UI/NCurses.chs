@@ -1079,6 +1079,7 @@ setKeypad :: Window -> Bool -> Curses ()
 setKeypad win set = Curses (io >>= checkRC "setKeypad") where
 	io = {# call keypad #} win (cFromBool set)
 
+-- | Return current cursor position as (row, column).
 getCursor :: Window -> Curses (Integer, Integer)
 getCursor win = Curses $ do
 	row <- {# call getcury #} win
