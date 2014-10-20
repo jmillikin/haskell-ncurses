@@ -42,6 +42,8 @@ module UI.NCurses
 	, drawBox
 	, drawLineH
 	, drawLineV
+	, clear
+	, clearLine
 	, setBackground
 	
 	-- * Attributes
@@ -338,6 +340,15 @@ drawLineV :: Maybe Glyph -> Integer -> Update ()
 drawLineV g n = withWindow_ "drawLineV" $ \win ->
 	withGlyph g $ \pChar ->
 	{# call wvline_set #} win pChar (fromInteger n)
+
+-- | Clear the window content by drawing blanks to every position.
+clear :: Update ()
+clear = withWindow_ "clear" {# call wclear #}
+
+-- | Clear the current line starting from the current cursor position
+-- (inclusive) to the end of the line.
+clearLine :: Update ()
+clearLine = withWindow_ "clear" {# call wclrtoeol #}
 
 -- | Set the window&#x2019;s background glyph. The glyph will be drawn in
 -- place of any blank characters, and the glyph&#x2019;s attributes will be
