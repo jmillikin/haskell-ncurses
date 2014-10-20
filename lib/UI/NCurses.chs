@@ -669,9 +669,13 @@ data Event
 
 -- | Get the next 'Event' from a given window.
 --
--- If the timeout is specified, and no event is received within the timeout,
--- @getEvent@ returns 'Nothing'. If the timeout is 0 or less, @getEvent@
--- will not block at all.
+-- If the timeout is 'Nothing', @getEvent@ blocks until an event is received.
+--
+-- If the timeout is specified, @getEvent@ blocks for up to that many
+-- milliseconds. If no event is received before timing out, @getEvent@ returns
+-- 'Nothing'.
+--
+-- If the timeout is 0 or less, @getEvent@ will not block at all.
 getEvent :: Window
          -> Maybe Integer -- ^ Timeout, in milliseconds
          -> Curses (Maybe Event)
