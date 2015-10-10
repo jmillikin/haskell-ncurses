@@ -37,3 +37,12 @@ int hsncurses_wget_wch(WINDOW *w, wint_t *out) {
 	pthread_sigmask(SIG_SETMASK, &old_mask, NULL);
 	return rc;
 }
+
+void hsncurses_init_cchar_t(cchar_t *wch, attr_t attr, wchar_t *chars, size_t chars_len) {
+	size_t ii;
+	memset(wch, 0, sizeof(cchar_t));
+	wch->attr = attr;
+	for (ii = 0; ii < chars_len && ii < CCHARW_MAX; ii++) {
+		wch->chars[ii] = chars[ii];
+	}
+}

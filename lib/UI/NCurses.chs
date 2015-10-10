@@ -313,14 +313,14 @@ drawBorder :: Maybe Glyph -- ^ Left edge
            -> Update ()
 drawBorder le re te be tl tr bl br =
 	withWindow_ "drawBorder" $ \win ->
-	withGlyph le $ \pLE ->
-	withGlyph re $ \pRE ->
-	withGlyph te $ \pTE ->
-	withGlyph be $ \pBE ->
-	withGlyph tl $ \pTL ->
-	withGlyph tr $ \pTR ->
-	withGlyph bl $ \pBL ->
-	withGlyph br $ \pBR ->
+	withMaybeGlyph le $ \pLE ->
+	withMaybeGlyph re $ \pRE ->
+	withMaybeGlyph te $ \pTE ->
+	withMaybeGlyph be $ \pBE ->
+	withMaybeGlyph tl $ \pTL ->
+	withMaybeGlyph tr $ \pTR ->
+	withMaybeGlyph bl $ \pBL ->
+	withMaybeGlyph br $ \pBR ->
 	{# call wborder_set #} win pLE pRE pTE pBE pTL pTR pBL pBR
 
 -- | @drawBox v h = drawBorder v v h h Nothing Nothing Nothing Nothing@
@@ -331,14 +331,14 @@ drawBox v h = drawBorder v v h h Nothing Nothing Nothing Nothing
 -- maximum character count. The cursor position is not changed.
 drawLineH :: Maybe Glyph -> Integer -> Update ()
 drawLineH g n = withWindow_ "drawLineH" $ \win ->
-	withGlyph g $ \pChar ->
+	withMaybeGlyph g $ \pChar ->
 	{# call whline_set #} win pChar (fromInteger n)
 
 -- | Draw a vertical line from top to bottom, using the given glyph and
 -- maximum character count. The cursor position is not changed.
 drawLineV :: Maybe Glyph -> Integer -> Update ()
 drawLineV g n = withWindow_ "drawLineV" $ \win ->
-	withGlyph g $ \pChar ->
+	withMaybeGlyph g $ \pChar ->
 	{# call wvline_set #} win pChar (fromInteger n)
 
 -- | Clear the window content by drawing blanks to every position.
@@ -355,7 +355,7 @@ clearLine = withWindow_ "clear" {# call wclrtoeol #}
 -- combined with those of every character.
 setBackground :: Glyph -> Update ()
 setBackground g = withWindow_ "setBackground" $ \win ->
-	withGlyph (Just g) $ \pChar ->
+	withMaybeGlyph (Just g) $ \pChar ->
 	{# call wbkgrndset #} win pChar >> return 0
 
 data Attribute
@@ -526,19 +526,19 @@ data Glyph = Glyph
 	}
 	deriving (Show, Eq)
 
-withGlyph :: Maybe Glyph -> (CCharT -> IO a) -> IO a
-withGlyph Nothing io = io (CCharT nullPtr)
-withGlyph (Just (Glyph char attrs)) io =
+withMaybeGlyph :: Maybe Glyph -> (CCharT -> IO a) -> IO a
+withMaybeGlyph Nothing io = io (CCharT nullPtr)
+withMaybeGlyph (Just g) io = withGlyph g io
+
+withGlyph :: Glyph -> (CCharT -> IO a) -> IO a
+withGlyph (Glyph char attrs) io =
 	let cAttrs = foldl' (\acc a -> acc .|. attrToInt a) 0 attrs in
-	
+	withCWStringLen [char] $ \(cChars, cCharsLen) ->
 	allocaBytes {# sizeof cchar_t #} $ \pBuf -> do
-	void $ {# call memset #} (castPtr pBuf) 0 {# sizeof cchar_t #}
 #ifdef HSNCURSES_NEWTYPE_POINTER_HOOKS
-	{# set cchar_t->attr #} (CCharT pBuf) cAttrs
-	{# set cchar_t->chars #} (CCharT pBuf) (wordPtrToPtr (fromIntegral (ord char)))
+	{# call hsncurses_init_cchar_t #} (CCharT pBuf) cAttrs cChars (fromIntegral cCharsLen)
 #else
-	{# set cchar_t->attr #} pBuf cAttrs
-	{# set cchar_t->chars #} pBuf (wordPtrToPtr (fromIntegral (ord char)))
+	{# call hsncurses_init_cchar_t #} pBuf cAttrs cChars cCharsLen (fromIntegral cCharsLen)
 #endif
 	io (CCharT pBuf)
 

@@ -17,4 +17,6 @@ int hsncurses_has_mouse();
 
 int hsncurses_wget_wch(WINDOW *, wint_t *);
 
+void hsncurses_init_cchar_t(cchar_t *wch, attr_t attr, wchar_t *chars, size_t chars_len);
+
 #endif
