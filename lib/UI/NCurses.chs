@@ -36,6 +36,12 @@ module UI.NCurses
 	, windowSize
 	, updateWindow
 	
+	-- ** Virtual windows (pads)
+	, Pad
+	, newPad
+	, closePad
+	, updatePad
+	
 	-- * The cursor
 	, moveCursor
 	, cursorPosition
@@ -303,6 +309,56 @@ windowSize = withWindow $ \win -> do
 	rows <- {# call getmaxx #} win
 	cols <- {# call getmaxy #} win
 	return (toInteger rows, toInteger cols)
+
+-- | A Pad is a 'Window' that is not associated with the screen.
+newtype Pad = Pad Window
+
+-- | Create a new 'Pad' with the given dimensions.
+--
+-- When the pad is no longer needed, call 'closePad'. Pads are not
+-- garbage&#x2013;collected, because there&#x2019;s no way to know if
+-- they&#x2019;re still in use.
+newPad :: Integer -- ^ Rows
+       -> Integer -- ^ Columns
+       -> Curses Pad
+newPad rows cols = Curses $ do
+	win <- {# call newpad #}
+		(fromInteger rows)
+		(fromInteger cols)
+	if windowPtr win == nullPtr
+		then error "newPad: newpad() returned NULL"
+		else do
+			void $ {# call keypad #} win 1
+			void $ {# call meta #} win 1
+			{# call wtimeout #} win (- 1)
+			return (Pad win)
+
+-- | Close a pad, and free all resources associated with it. Once a
+-- pad has been closed, it is no longer safe to use.
+closePad :: Pad -> Curses ()
+closePad (Pad win) = Curses ({# call delwin #} win >>= checkRC "closePad")
+
+updatePad :: Pad
+          -> Integer -- Top-most row of the pad's update region (pminrow).
+          -> Integer -- Left-most column of the pad's update region (pmincol).
+          -> Integer -- Top-most row of the screen's update region (sminrow).
+          -> Integer -- Left-most column of the screen's update region (smincol).
+          -> Integer -- Bottom-most row of the screen's update region (smaxrow).
+          -> Integer -- Right-most column of the screen's update region (smaxcol).
+          -> Update a
+          -> Curses a
+updatePad (Pad win) pminrow pmincol sminrow smincol smaxrow smaxcol (Update reader) = do
+	a <- R.runReaderT reader win
+	Curses $
+		({# call pnoutrefresh #} win
+			(fromInteger pminrow)
+			(fromInteger pmincol)
+			(fromInteger sminrow)
+			(fromInteger smincol)
+			(fromInteger smaxrow)
+			(fromInteger smaxcol))
+		>>= checkRC "updatePad"
+	return a
 
 -- | Move the window&#x2019;s cursor position to the given row and column.
 moveCursor :: Integer -- ^ Row
