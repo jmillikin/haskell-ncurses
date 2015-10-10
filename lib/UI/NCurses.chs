@@ -30,14 +30,22 @@ module UI.NCurses
 	, newWindow
 	, closeWindow
 	, cloneWindow
+	, moveWindow
+	, windowPosition
+	, resizeWindow
+	, windowSize
+	, updateWindow
+	
+	-- * The cursor
+	, moveCursor
+	, cursorPosition
 	
 	-- * Drawing to the screen
-	, updateWindow
 	, render
-	, moveCursor
 	, setColor
 	, drawString
 	, drawText
+	, drawGlyph
 	, drawBorder
 	, drawBox
 	, drawLineH
@@ -272,6 +280,44 @@ updateWindow win (Update reader) = do
 	Curses ({# call wnoutrefresh #} win >>= checkRC "updateWindow")
 	return a
 
+-- | Moves the window to the given (row,column) coordinate.
+moveWindow :: Integer -> Integer -> Update ()
+moveWindow row col = withWindow_ "moveWindow"  $ \win ->
+	{# call mvwin #} win (fromInteger row) (fromInteger col)
+
+-- | Returns the current (row, column) coordinates of the window.
+windowPosition :: Update (Integer, Integer)
+windowPosition = withWindow $ \win -> do
+	row <- {# call getbegx #} win
+	col <- {# call getbegy #} win
+	return (toInteger row, toInteger col)
+
+-- | Resizes the window to the given row and column dimensions.
+resizeWindow :: Integer -> Integer -> Update ()
+resizeWindow rows cols = withWindow_ "resizeWindow"  $ \win ->
+	{# call wresize #} win (fromInteger rows) (fromInteger cols)
+
+-- Returns the current (row, column) dimensions of the window.
+windowSize :: Update (Integer, Integer)
+windowSize = withWindow $ \win -> do
+	rows <- {# call getmaxx #} win
+	cols <- {# call getmaxy #} win
+	return (toInteger rows, toInteger cols)
+
+-- | Move the window&#x2019;s cursor position to the given row and column.
+moveCursor :: Integer -- ^ Row
+           -> Integer -- ^ Column
+           -> Update ()
+moveCursor y x = withWindow_ "moveCursor" $ \win ->
+	{# call wmove #} win (fromInteger y) (fromInteger x)
+
+-- | Returns the current (row,column) coordinates of the cursor.
+cursorPosition :: Update (Integer, Integer)
+cursorPosition = withWindow $ \win -> do
+	row <- {# call getcurx #} win
+	col <- {# call getcury #} win
+	return (toInteger row, toInteger col)
+
 -- | Re&#x2013;draw any portions of the screen which have changed since the
 -- last render.
 render :: Curses ()
@@ -283,13 +329,6 @@ setColor :: ColorID -> Update ()
 setColor (ColorID pair) = withWindow_ "setColor" $ \win ->
 	{# call wcolor_set #} win pair nullPtr
 
--- | Move the window&#x2019;s cursor position to the given row and column.
-moveCursor :: Integer -- ^ Row
-           -> Integer -- ^ Column
-           -> Update ()
-moveCursor y x = withWindow_ "moveCursor" $ \win ->
-	{# call wmove #} win (fromInteger y) (fromInteger x)
-
 -- | Add some text to the window, at the current cursor position.
 drawString :: String -> Update ()
 drawString str = withWindow_ "drawString" $ \win ->
@@ -299,6 +338,11 @@ drawString str = withWindow_ "drawString" $ \win ->
 drawText :: T.Text -> Update ()
 drawText txt = withWindow_ "drawText" $ \win ->
 	withCWString (T.unpack txt) ({# call waddwstr #} win)
+
+drawGlyph :: Glyph -> Update ()
+drawGlyph glyph = withWindow_ "drawGlyph" $ \win ->
+	withGlyph glyph $ \pGlyph ->
+	{# call wadd_wch #} win pGlyph
 
 -- | Draw a border around the edge of the window. For any edge, passing
 -- 'Nothing' means to use the default glyph.
