@@ -75,6 +75,12 @@ enum hsncurses_Attribute
 , hsncurses_WA_ALTCHARSET = WA_ALTCHARSET
 , hsncurses_WA_INVIS = WA_INVIS
 , hsncurses_WA_PROTECT = WA_PROTECT
+, hsncurses_WA_HORIZONTAL = WA_HORIZONTAL
+, hsncurses_WA_LEFT = WA_LEFT
+, hsncurses_WA_LOW = WA_LOW
+, hsncurses_WA_RIGHT = WA_RIGHT
+, hsncurses_WA_TOP = WA_TOP
+, hsncurses_WA_VERTICAL = WA_VERTICAL
 };
 #endc
 

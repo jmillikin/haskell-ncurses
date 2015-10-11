@@ -459,15 +459,22 @@ setBackground g = withWindow_ "setBackground" $ \win ->
 	{# call wbkgrndset #} win pChar >> return 0
 
 data Attribute
-	= AttributeStandout
-	| AttributeUnderline
-	| AttributeReverse
-	| AttributeBlink
-	| AttributeDim
-	| AttributeBold
-	| AttributeAltCharset
-	| AttributeInvisible
-	| AttributeProtect
+	= AttributeColor ColorID -- ^ A_COLOR
+	| AttributeStandout -- ^ A_STANDOUT
+	| AttributeUnderline -- ^ A_UNDERLINE
+	| AttributeReverse -- ^ A_REVERSE
+	| AttributeBlink -- ^ A_BLINK
+	| AttributeDim -- ^ A_DIM
+	| AttributeBold -- ^ A_BOLD
+	| AttributeAltCharset -- ^ A_ALTCHARSET
+	| AttributeInvisible -- ^ A_INVISIBLE
+	| AttributeProtect -- ^ A_PROTECT
+	| AttributeHorizontal -- ^ A_HORIZONTAL
+	| AttributeLeft -- ^ A_LEFT
+	| AttributeLow -- ^ A_LOW
+	| AttributeRight -- ^ A_RIGHT
+	| AttributeTop -- ^ A_TOP
+	| AttributeVertical -- ^ A_VERTICAL
 	deriving (Show, Eq)
 
 attrEnum :: E.Attribute -> AttrT
@@ -484,6 +491,16 @@ attrToInt x = case x of
 	AttributeAltCharset  -> attrEnum E.WA_ALTCHARSET
 	AttributeInvisible   -> attrEnum E.WA_INVIS
 	AttributeProtect     -> attrEnum E.WA_PROTECT
+	AttributeHorizontal  -> attrEnum E.WA_HORIZONTAL
+	AttributeLeft        -> attrEnum E.WA_LEFT
+	AttributeLow         -> attrEnum E.WA_LOW
+	AttributeRight       -> attrEnum E.WA_RIGHT
+	AttributeTop         -> attrEnum E.WA_TOP
+	AttributeVertical    -> attrEnum E.WA_VERTICAL
+
+	-- Colors get special handling: the function COLOR_PAIR converts an
+	-- NCURSES_PAIRS_T to an attr_t.
+	AttributeColor (ColorID cid) -> fromIntegral ({# call pure unsafe COLOR_PAIR as c_COLOR_PAIR #} (fromIntegral cid))
 
 -- | Set a single 'Attribute' on the current window. No other attributes
 -- are modified.
