@@ -45,6 +45,7 @@ module UI.NCurses
 	-- * The cursor
 	, moveCursor
 	, cursorPosition
+	, getCursor
 	
 	-- * Drawing to the screen
 	, render
@@ -146,7 +147,6 @@ module UI.NCurses
 	, setTouched
 	, setRowsTouched
 	, setKeypad
-	, getCursor
 	, resizeTerminal
 	) where
 
@@ -369,10 +369,22 @@ moveCursor y x = withWindow_ "moveCursor" $ \win ->
 	{# call wmove #} win (fromInteger y) (fromInteger x)
 
 -- | Returns the current (row,column) coordinates of the cursor.
+--
+-- This is the same as 'getCursor', but is usable within an Update.
 cursorPosition :: Update (Integer, Integer)
 cursorPosition = withWindow $ \win -> do
 	row <- {# call getcurx #} win
 	col <- {# call getcury #} win
+	return (toInteger row, toInteger col)
+
+-- | Return current cursor position as (row, column).
+--
+-- This is the same as 'cursorPosition', but is usable outside
+-- of an Update.
+getCursor :: Window -> Curses (Integer, Integer)
+getCursor win = Curses $ do
+	row <- {# call getcury #} win
+	col <- {# call getcurx #} win
 	return (toInteger row, toInteger col)
 
 -- | Re&#x2013;draw any portions of the screen which have changed since the
@@ -1207,13 +1219,6 @@ setRowsTouched touched start count = withWindow_ "setRowsTouched" $ \win ->
 setKeypad :: Window -> Bool -> Curses ()
 setKeypad win set = Curses (io >>= checkRC "setKeypad") where
 	io = {# call keypad #} win (cFromBool set)
-
--- | Return current cursor position as (row, column).
-getCursor :: Window -> Curses (Integer, Integer)
-getCursor win = Curses $ do
-	row <- {# call getcury #} win
-	col <- {# call getcurx #} win
-	return (toInteger row, toInteger col)
 
 -- | Attempt to resize the terminal to the given number of lines and columns.
 resizeTerminal :: Integer -> Integer -> Curses ()
