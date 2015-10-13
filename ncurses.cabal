@@ -75,14 +75,6 @@ flag force-narrow-library
     only useful on systems that have the ncursesw package installed
     incorrectly. On most systems this will cause compile- or run-time errors.
 
-flag force-c2hs-newtype-pointer-hooks
-  default: False
-  manual: True
-  description:
-    Force using the newtype'd pointer hooks introduced in c2hs 0.18.1. This
-    is only necessary when building with c2hs==0.18.1, as 0.18.2 and later
-    can be auto-detected.
-
 library
   hs-source-dirs: lib
   ghc-options: -Wall -O2
@@ -115,9 +107,6 @@ library
       extra-libraries: panel ncurses pthread
     else
       extra-libraries: panelw ncursesw pthread
-
-  if flag(force-c2hs-newtype-pointer-hooks)
-    cc-options: -DHSNCURSES_NEWTYPE_POINTER_HOOKS
 
   c-sources: cbits/hsncurses-shim.c
 

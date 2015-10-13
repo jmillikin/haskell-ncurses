@@ -183,23 +183,6 @@ import           UI.NCurses.Types
 
 #include "cbits/hsncurses-shim.h"
 
--- Starting with version 0.18.1, c2hs changed the handling of get/set hooks
--- when using newtype'd pointers: <https://github.com/haskell/c2hs/issues/96>.
---
--- Version 0.18.2 introduced the C2HS_MIN_VERSION macro to perform
--- version detection: <https://github.com/haskell/c2hs/issues/107>.
---
--- Detecting version 0.18.1 is impractical, so we depend on a Cabal flag for
--- users who need that particular version.
-#if !defined(HSNCURSES_NEWTYPE_POINTER_HOOKS)
-#if !defined(C2HS_MIN_VERSION)
-#define C2HS_MIN_VERSION(mj,mn,rv) (mj<=0&&mn<=18&&rv<=0)
-#endif
-#if C2HS_MIN_VERSION(0,18,1)
-#define HSNCURSES_NEWTYPE_POINTER_HOOKS
-#endif
-#endif
-
 {# pointer *WINDOW as Window nocode #}
 {# pointer *cchar_t as CCharT newtype #}
 {# pointer *wchar_t as CWString nocode #}
@@ -665,11 +648,7 @@ withGlyph (Glyph char attrs) io =
 	let cAttrs = foldl' (\acc a -> acc .|. attrToInt a) 0 attrs in
 	withCWStringLen [char] $ \(cChars, cCharsLen) ->
 	allocaBytes {# sizeof cchar_t #} $ \pBuf -> do
-#ifdef HSNCURSES_NEWTYPE_POINTER_HOOKS
 	{# call hsncurses_init_cchar_t #} (CCharT pBuf) cAttrs cChars (fromIntegral cCharsLen)
-#else
-	{# call hsncurses_init_cchar_t #} pBuf cAttrs cChars cCharsLen (fromIntegral cCharsLen)
-#endif
 	io (CCharT pBuf)
 
 -- | Upper left corner
