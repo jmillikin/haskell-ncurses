@@ -147,6 +147,7 @@ module UI.NCurses
 	, setRowsTouched
 	, setKeypad
 	, getCursor
+	, resizeTerminal
 	) where
 
 import           Control.Exception (bracket_)
@@ -1213,6 +1214,11 @@ getCursor win = Curses $ do
 	row <- {# call getcury #} win
 	col <- {# call getcurx #} win
 	return (toInteger row, toInteger col)
+
+-- | Attempt to resize the terminal to the given number of lines and columns.
+resizeTerminal :: Integer -> Integer -> Curses ()
+resizeTerminal lines cols = Curses (io >>= checkRC "resizeTerminal") where
+	io = {# call resizeterm #} (fromInteger lines) (fromInteger cols)
 
 withWindow :: (Window -> IO a) -> Update a
 withWindow io = Update (R.ReaderT (\win -> Curses (io win)))
