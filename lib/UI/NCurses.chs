@@ -68,6 +68,7 @@ module UI.NCurses
 	
 	-- * Colors
 	, Color (..)
+	, maxColor
 	, ColorID
 	, supportsColor
 	, canDefineColor
@@ -530,7 +531,25 @@ data Color
 	--
 	-- This is most useful for terminals with translucent backgrounds.
 	| ColorDefault
+
+	-- | A color outside of the standard COLOR_* enum space, for terminals
+	-- that support more than eight colors.
+	--
+	-- Color-related functions may fail if a Color is provided that cannot
+	-- be supported by the current terminal. Users are responsible for
+	-- checking 'maxColor' when using extended colors.
+	| Color Int16
 	deriving (Show, Eq)
+
+-- Get the maximum 'Color' supported by the current terminal.
+maxColor :: Curses Integer
+maxColor = Curses $ do
+	count <- toInteger `fmap` peek c_COLORS
+	return (count - 1)
+
+foreign import ccall "static &COLORS"
+	c_COLORS :: Ptr CInt
+
 
 -- | A wrapper around 'Integer' to ensure clients don&#x2019;t use an
 -- uninitialized color in an attribute.
@@ -542,6 +561,7 @@ colorEnum = fromInteger . E.fromEnum
 
 colorToShort :: Color -> CShort
 colorToShort x = case x of
+	Color n      -> CShort n
 	ColorBlack   -> colorEnum E.COLOR_BLACK
 	ColorRed     -> colorEnum E.COLOR_RED
 	ColorGreen   -> colorEnum E.COLOR_GREEN
