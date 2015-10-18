@@ -34,6 +34,7 @@ module UI.NCurses.Panel
 	, replacePanelWindow
 	) where
 
+import           Control.Exception (throwIO)
 import           Foreign
 import           Foreign.C
 
@@ -57,7 +58,7 @@ newPanel :: Window -> Curses Panel
 newPanel win = Curses $ do
 	p <- {# call new_panel #} win
 	if panelPtr p == nullPtr
-		then error "newPanel: new_panel() returned NULL"
+		then throwIO (CursesException "newPanel: new_panel() returned NULL")
 		else return p
 
 -- | Permanently removes the given panel from the panel stack.

@@ -21,6 +21,7 @@ module UI.NCurses
 	  Curses
 	, Update
 	, Window
+	, CursesException
 	
 	-- * Initialization
 	, runCurses
@@ -135,6 +136,11 @@ module UI.NCurses
 	, CursorMode(CursorInvisible, CursorVisible, CursorVeryVisible)
 	, setCursorMode
 	
+	-- * Error handling
+	, tryCurses
+	, catchCurses
+	, throwCurses
+	
 	-- * misc
 	, setRaw
 	, setCBreak
@@ -151,7 +157,7 @@ module UI.NCurses
 	, resizeTerminal
 	) where
 
-import           Control.Exception (bracket_)
+import           Control.Exception (bracket_, catch, throwIO, try)
 import           Control.Monad (when, unless)
 import qualified Control.Monad.Trans.Reader as R
 import           Data.Char (chr, ord)
@@ -238,7 +244,7 @@ newWindow rows cols x y = Curses $ do
 		(fromInteger x)
 		(fromInteger y)
 	if windowPtr win == nullPtr
-		then error "newWindow: newwin() returned NULL"
+		then throwIO (CursesException "newWindow: newwin() returned NULL")
 		else do
 			void $ {# call keypad #} win 1
 			void $ {# call meta #} win 1
@@ -259,7 +265,7 @@ cloneWindow :: Window -> Curses Window
 cloneWindow old = Curses $ do
 	win <- {# call dupwin #} old
 	if windowPtr win == nullPtr
-		then error "cloneWindow: dupwin() returned NULL"
+		then throwIO (CursesException "cloneWindow: dupwin() returned NULL")
 		else return win
 
 -- | Apply a window update to the window. After all of an
@@ -311,7 +317,7 @@ newPad rows cols = Curses $ do
 		(fromInteger rows)
 		(fromInteger cols)
 	if windowPtr win == nullPtr
-		then error "newPad: newpad() returned NULL"
+		then throwIO (CursesException "newPad: newpad() returned NULL")
 		else do
 			void $ {# call keypad #} win 1
 			void $ {# call meta #} win 1
@@ -623,9 +629,9 @@ newColorID :: Color -- ^ Foreground
                       -- (0 < /n/ &#x2264; 'maxColorID')
            -> Curses ColorID
 newColorID fg bg n = Curses $ do
-	unless (n > 0) $ error "newColorID: n must be > 0"
+	unless (n > 0) $ throwIO (CursesException "newColorID: n must be > 0")
 	maxColor <- unCurses maxColorID
-	unless (n <= maxColor) $ error "newColorID: n must be <= maxColorID"
+	unless (n <= maxColor) $ throwIO (CursesException "newColorID: n must be <= maxColorID")
 	checkRC "newColorID" =<< {# call init_pair #}
 		(fromInteger n)
 		(colorToShort fg)
@@ -1138,6 +1144,25 @@ setCursorMode mode = Curses $ do
 		1 -> CursorVisible
 		2 -> CursorVeryVisible
 		_ -> CursorModeUnknown rc
+
+-- | Returns Left if a Curses exception occured in the given computation.
+--
+-- See 'try' for more details.
+tryCurses :: Curses a -> Curses (Either CursesException a)
+tryCurses (Curses io) = Curses (try io)
+
+-- | Handles errors in the given computation by passing them to a callback.
+--
+-- See 'catch' for more details.
+catchCurses :: Curses a -> (CursesException -> Curses a) -> Curses a
+catchCurses (Curses io) fn = Curses (catch io (unCurses . fn))
+
+-- | Throws an exception from within Curses handling code. This is useful
+-- for re-throwing errors from within a 'catchCurses' callback.
+--
+-- See 'throwIO' for more details.
+throwCurses :: CursesException -> Curses a
+throwCurses = Curses . throwIO
 
 -- | Runs @raw()@ or @noraw()@
 setRaw :: Bool -> Curses ()

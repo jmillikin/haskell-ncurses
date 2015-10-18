@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveDataTypeable #-}
+
 -- Copyright (C) 2010 John Millikin <jmillikin@gmail.com>
 --
 -- This program is free software: you can redistribute it and/or modify
@@ -16,10 +18,12 @@
 module UI.NCurses.Types where
 
 import qualified Control.Applicative as A
+import           Control.Exception (Exception, throwIO)
 import           Control.Monad (liftM, ap)
 import           Control.Monad.Fix (MonadFix, mfix)
 import           Control.Monad.IO.Class (MonadIO, liftIO)
 import           Control.Monad.Trans.Reader (ReaderT)
+import           Data.Typeable
 import qualified Foreign as F
 import qualified Foreign.C as F
 
@@ -64,9 +68,14 @@ instance A.Applicative Update where
 
 newtype Window = Window { windowPtr :: F.Ptr Window }
 
+newtype CursesException = CursesException String
+	deriving (Show, Typeable)
+
+instance Exception CursesException
+
 checkRC :: String -> F.CInt -> IO ()
 checkRC name rc = if toInteger rc == E.fromEnum E.ERR
-	then error $ name ++ ": rc == ERR"
+	then throwIO (CursesException (name ++ ": rc == ERR"))
 	else return ()
 
 cToBool :: Integral a => a -> Bool
