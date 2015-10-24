@@ -285,8 +285,8 @@ moveWindow row col = withWindow_ "moveWindow"  $ \win ->
 -- | Returns the current (row, column) coordinates of the window.
 windowPosition :: Update (Integer, Integer)
 windowPosition = withWindow $ \win -> do
-	row <- {# call getbegx #} win
-	col <- {# call getbegy #} win
+	row <- {# call getbegy #} win
+	col <- {# call getbegx #} win
 	return (toInteger row, toInteger col)
 
 -- | Resizes the window to the given row and column dimensions.
@@ -297,8 +297,8 @@ resizeWindow rows cols = withWindow_ "resizeWindow"  $ \win ->
 -- Returns the current (row, column) dimensions of the window.
 windowSize :: Update (Integer, Integer)
 windowSize = withWindow $ \win -> do
-	rows <- {# call getmaxx #} win
-	cols <- {# call getmaxy #} win
+	rows <- {# call getmaxy #} win
+	cols <- {# call getmaxx #} win
 	return (toInteger rows, toInteger cols)
 
 -- | A Pad is a 'Window' that is not associated with the screen.
@@ -355,16 +355,16 @@ updatePad (Pad win) pminrow pmincol sminrow smincol smaxrow smaxcol (Update read
 moveCursor :: Integer -- ^ Row
            -> Integer -- ^ Column
            -> Update ()
-moveCursor y x = withWindow_ "moveCursor" $ \win ->
-	{# call wmove #} win (fromInteger y) (fromInteger x)
+moveCursor row col = withWindow_ "moveCursor" $ \win ->
+	{# call wmove #} win (fromInteger row) (fromInteger col)
 
 -- | Returns the current (row,column) coordinates of the cursor.
 --
 -- This is the same as 'getCursor', but is usable within an Update.
 cursorPosition :: Update (Integer, Integer)
 cursorPosition = withWindow $ \win -> do
-	row <- {# call getcurx #} win
-	col <- {# call getcury #} win
+	row <- {# call getcury #} win
+	col <- {# call getcurx #} win
 	return (toInteger row, toInteger col)
 
 -- | Return current cursor position as (row, column).
@@ -1204,8 +1204,8 @@ enclosed :: Window
          -> Integer -- ^ Row
          -> Integer -- ^ Column
          -> Curses Bool
-enclosed win y x = Curses . fmap cToBool $
-	{# call wenclose #} win (fromInteger y) (fromInteger x)
+enclosed win row col = Curses . fmap cToBool $
+	{# call wenclose #} win (fromInteger row) (fromInteger col)
 
 -- | Return (rows, columns) of current screen
 screenSize :: Curses (Integer, Integer)
