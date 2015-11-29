@@ -37,6 +37,11 @@ module UI.NCurses
 	, windowSize
 	, updateWindow
 	
+	-- ** Copying window content
+	, OverlayMode(..)
+	, overlay
+	, copyWindow
+	
 	-- ** Virtual windows (pads)
 	, Pad
 	, newPad
@@ -300,6 +305,45 @@ windowSize = withWindow $ \win -> do
 	rows <- {# call getmaxy #} win
 	cols <- {# call getmaxx #} win
 	return (toInteger rows, toInteger cols)
+
+data OverlayMode
+	-- | Overlay only non-blank characters.
+	= OverlayMerge
+	-- | Overlay all characters, including blanks.
+	| OverlayReplace
+	deriving (Show, Eq)
+
+-- | Overlay the entire content of another window onto this window.
+--
+-- The overlay mode specifies whether to copy blank characters.
+--
+-- Use 'copyWindow' if precise control over coordinates is required.
+overlay :: Window -> OverlayMode -> Update ()
+overlay src mode = withWindow_ "overlay" $ \dst -> case mode of
+	OverlayMerge -> {# call overlay as c_overlay #} src dst
+	OverlayReplace -> {# call overwrite #} src dst
+
+-- | Overlay a region of another window onto this window.
+--
+-- Use 'overlay' for copying the entire area of a window.
+copyWindow :: Window
+           -> OverlayMode -- Whether to copy blank characters.
+           -> Integer -- Top-most row of the source window's overlay region (sminrow).
+           -> Integer -- Left-most column of the source window's overlay region (smincol).
+           -> Integer -- Top-most row of the destination window's overlay region (dminrow).
+           -> Integer -- Left-most column of the destination window's overlay region (dmincol).
+           -> Integer -- Bottom-most row of the destination window's overlay region (dmaxrow).
+           -> Integer -- Right-most column of the destination window's overlay region (dmaxcol).
+           -> Update ()
+copyWindow src mode sminrow smincol dminrow dmincol dmaxrow dmaxcol = withWindow_ "copyWindow" $ \dst -> do
+	{# call copywin #} src dst
+		(fromInteger sminrow)
+		(fromInteger smincol)
+		(fromInteger dminrow)
+		(fromInteger dmincol)
+		(fromInteger dmaxrow)
+		(fromInteger dmaxcol)
+		(cFromBool (mode == OverlayReplace))
 
 -- | A Pad is a 'Window' that is not associated with the screen.
 newtype Pad = Pad Window
