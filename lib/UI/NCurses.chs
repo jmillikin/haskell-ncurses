@@ -343,7 +343,7 @@ copyWindow src mode sminrow smincol dminrow dmincol dmaxrow dmaxcol = withWindow
 		(fromInteger dmincol)
 		(fromInteger dmaxrow)
 		(fromInteger dmaxcol)
-		(cFromBool (mode == OverlayReplace))
+		(cFromBool (mode /= OverlayReplace))
 
 -- | A Pad is a 'Window' that is not associated with the screen.
 newtype Pad = Pad Window
