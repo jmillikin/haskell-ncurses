@@ -25,6 +25,7 @@ module UI.NCurses
 	
 	-- * Initialization
 	, runCurses
+  , runNewCurses
 	, defaultWindow
 	
 	-- * Window management
@@ -172,6 +173,7 @@ import qualified Data.Map as M
 import qualified Data.Text as T
 import           Foreign hiding (shift, void)
 import           Foreign.C
+import					 Foreign.Ptr (nullPtr)
 
 import qualified UI.NCurses.Enums as E
 import           UI.NCurses.Compat
@@ -195,6 +197,8 @@ import           UI.NCurses.Types
 
 #include "cbits/hsncurses-shim.h"
 
+#include <stdio.h>
+
 {# pointer *WINDOW as Window nocode #}
 {# pointer *cchar_t as CCharT newtype #}
 {# pointer *wchar_t as CWString nocode #}
@@ -212,6 +216,30 @@ runCurses = bracket_ initCurses {# call endwin #} . unCurses where
 	allEvents = fromInteger (E.fromEnum E.ALL_MOUSE_EVENTS)
 	initCurses = do
 		void {# call initscr #}
+		void {# call cbreak #}
+		void $ {# call mousemask #} allEvents nullPtr
+		hasColor <- {# call has_colors #}
+		when (hasColor == 1) $ do
+			void {# call start_color #}
+			void {# call use_default_colors #}
+		stdscr <- peek c_stdscr
+		void $ {# call keypad #} (Window stdscr) 1
+		void $ {# call meta #} (Window stdscr) 1
+		{# call wtimeout #} (Window stdscr) (- 1)
+
+-- | Put the terminal in graphical mode, including enabling special keys,
+-- colors, and mouse events (if supported).
+--
+-- Inits curses with 'newterm', allowing free usage of stdout.
+--
+-- After the 'Curses' block has finished running, the terminal is reset
+-- to text mode.
+runNewCurses :: Curses a -> IO a
+runNewCurses = bracket_ initCurses {# call endwin #} . unCurses where
+	allEvents = fromInteger (E.fromEnum E.ALL_MOUSE_EVENTS)
+	initCurses = do
+		fd <- withCString "/dev/tty" $ \path -> withCString "r+" $ \mode -> {# call fopen #} path mode
+		void $ {# call newterm #} nullPtr fd fd
 		void {# call cbreak #}
 		void $ {# call mousemask #} allEvents nullPtr
 		hasColor <- {# call has_colors #}
